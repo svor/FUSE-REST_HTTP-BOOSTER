@@ -1,0 +1,39 @@
+schemaVersion: 2.1.0
+metadata:
+  name: apache-camel-springboot
+components:
+  - name: tools
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi8-d3eab13
+      memoryLimit: 3Gi
+      endpoints:
+        - exposure: none
+          name: debug
+          protocol: tcp
+          targetPort: 5005
+        - exposure: public
+          name: 8080-tcp
+          protocol: http
+          targetPort: 8080
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+  - name: m2
+    volume:
+      size: 1G
+commands:
+- id: build-the-project
+  exec:
+    commandLine: JAVA_HOME=$JAVA_HOME_8 mvn clean install
+    component: tools
+    workingDir: "${PROJECTS_ROOT}/fuse-rest-http-booster"
+- id: run-the-services
+  exec:
+    commandLine: JAVA_HOME=$JAVA_HOME_8 mvn spring-boot:run -DskipTests
+    component: tools
+    workingDir: "${PROJECTS_ROOT}/fuse-rest-http-booster"
+- id: run-the-services-debug
+  exec:
+    commandLine: JAVA_HOME=$JAVA_HOME_8 mvn spring-boot:run -DskipTests -Drun.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+    component: tools
+    workingDir: "${PROJECTS_ROOT}/fuse-rest-http-booster"
